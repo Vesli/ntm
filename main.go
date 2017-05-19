@@ -9,6 +9,7 @@ package main
 */
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,9 +18,21 @@ import (
 )
 
 func main() {
-	r := chi.NewRouter()
+	pathToConfig := flag.String("config", "config.json", "Path to config file")
+	flag.Parse()
 
-	r.Mount("/", registerRoutes())
-	fmt.Println("Running on port:", 8080)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", 8080), r))
+	service, err := newService(*pathToConfig)
+	if err != nil {
+		panic(err)
+	}
+	defer service.Close()
+
+	r := chi.NewRouter()
+	initRet := initMiddleware(service)
+
+	r.Use(initRet)
+	r.Mount("/ntm-api", registerRoutes())
+
+	fmt.Println("Running on port:", service.Config.Port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", service.Config.Port), r))
 }

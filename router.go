@@ -13,7 +13,7 @@ func registerRoutes() *chi.Mux {
 	})
 
 	r.Route("/user", func(r chi.Router) {
-		r.Get("/subscribe", registerUser)
+		r.Post("/subscribe", registerUser)
 	})
 	return r
 }
