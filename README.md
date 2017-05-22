@@ -7,8 +7,8 @@ Built with `go 1.8.1`
 MongoDB
 
 A config file containing a:
-    `dbname`__
-    `dburl`__
+    `dbname`  
+    `dburl`  
     `port`
 
 
