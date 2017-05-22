@@ -25,12 +25,3 @@ func initMiddleware(service *service) func(next http.Handler) http.Handler {
 		})
 	}
 }
-
-// func responseMiddleware() func(next http.Handler) http.Handler {
-// 	resp := &response{}
-// 	return func(next http.Handler) http.Handler {
-// 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 			helper.WriteJSON(w, resp, 200)
-// 		})
-// 	}
-// }
