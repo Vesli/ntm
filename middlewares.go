@@ -1,5 +1,9 @@
 package main
 
+/*
+	Basic middleware file.
+*/
+
 import (
 	"context"
 	"net/http"

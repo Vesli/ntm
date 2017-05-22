@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// WriteJSON is use to write a JSON response from object on request
+// WriteJSON is use to write a JSON response (error and success) from object on request
 func WriteJSON(w http.ResponseWriter, obj interface{}, responseStatus int) {
 	jData, err := json.Marshal(obj)
 	if err != nil {

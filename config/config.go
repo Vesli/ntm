@@ -16,7 +16,7 @@ type Config struct {
 	Port   int
 }
 
-// LoadConfig ...
+// LoadConfig by reading config file and unmarshal data to struct
 func LoadConfig(pathToConfig string) (*Config, error) {
 	data, err := ioutil.ReadFile(pathToConfig)
 	if err != nil {

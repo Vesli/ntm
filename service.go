@@ -1,5 +1,10 @@
 package main
 
+/*
+	Service structure that manage the configuration and the session.
+	It initialise the config struture and the session
+*/
+
 import (
 	"github.com/vesli/ntm/config"
 	mgo "gopkg.in/mgo.v2"

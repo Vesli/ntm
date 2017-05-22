@@ -1,5 +1,12 @@
 package main
 
+/*
+	A userModel that represt the structu of a user.
+	So far inserting a user into the DB is done with method.
+	The methods will be refacto to have a more generic DB
+	update matching the events routing
+*/
+
 import (
 	"crypto/sha256"
 	"errors"

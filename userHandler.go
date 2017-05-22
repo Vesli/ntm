@@ -1,5 +1,11 @@
 package main
 
+/*
+	The userHandler file is used as a user manager.
+	Here you have the main user actions.
+	Need to rewrite the requests response.
+*/
+
 import (
 	"encoding/json"
 	"io"

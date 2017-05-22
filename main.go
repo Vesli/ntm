@@ -1,11 +1,10 @@
 package main
 
 /*
-   Decouper via data.
+   Remember to structure via data.
    ex:
-       Y a un t-il un email a envoyer a inscription (package email)
-       Y a t-il des permissions pour un event, pour inscription? (package permissions)
-       Des medias?
+   	Is there an email to send at subscription (email package)
+	Is there any permission on event creation, subscription? (permissions package)
 */
 
 import (
