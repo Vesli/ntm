@@ -16,5 +16,11 @@ func registerRoutes() *chi.Mux {
 		r.Post("/subscribe", registerUser)
 		r.Post("/login", loginUser)
 	})
+
+	r.Route("/event", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("Comming soon"))
+		})
+	})
 	return r
 }
