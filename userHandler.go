@@ -3,16 +3,15 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/vesli/ntm/config"
 	"github.com/vesli/ntm/helper"
 	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 type userException struct {
 	Message string
+	Err     error
 }
 
 const userCollection = "users"
@@ -24,46 +23,66 @@ func contextFromMiddleware(r *http.Request) (*config.Config, *mgo.Session) {
 	return conf, sessionC
 }
 
-func userAlreadyExists(u *user, c *mgo.Collection) bool {
-	query := c.Find(bson.M{"name": u.Name, "email": u.Email}).One(u)
-	if query == nil {
-		return true
-	}
-
-	return false
-}
-
-func insertUserToDB(w http.ResponseWriter, u user, c *mgo.Collection) {
-	u.DateCreated = time.Now()
-	err := c.Insert(u)
-	if err != nil {
-		helper.WriteJSON(w, err, 500)
-	}
-
-	helper.WriteJSON(w, u, 200)
-}
-
 func registerUser(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 	var (
 		u  user
 		ue userException
 	)
-	decoder := json.NewDecoder(r.Body)
 
 	err := decoder.Decode(&u)
 	if err != nil {
-		helper.WriteJSON(w, err, 400)
+		ue.Err = err
+		ue.Message = "Error on decode"
+		helper.WriteJSON(w, ue, http.StatusBadRequest)
 		return
 	}
 
 	conf, sessionC := contextFromMiddleware(r)
 	c := sessionC.DB(conf.DBName).C(userCollection)
 
-	if userAlreadyExists(&u, c) {
+	if u.userAlreadyExists(c) {
 		ue.Message = "User name or email already exists"
-		helper.WriteJSON(w, ue, 400)
+		ue.Err = nil
+		helper.WriteJSON(w, ue, http.StatusBadRequest)
 		return
 	}
 
-	insertUserToDB(w, u, c)
+	u.insertUserToDB(w, c)
+}
+
+func loginUser(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var (
+		u  user
+		ue userException
+	)
+
+	err := decoder.Decode(&u)
+	if err != nil {
+		ue.Err = err
+		ue.Message = "Error on decode"
+		helper.WriteJSON(w, ue, http.StatusBadRequest)
+		return
+	}
+
+	conf, sessionC := contextFromMiddleware(r)
+	c := sessionC.DB(conf.DBName).C(userCollection)
+
+	accessToken, err := u.checkCredentials(c)
+	if err != nil {
+		ue.Err = err
+		ue.Message = "wrong password or login"
+		helper.WriteJSON(w, ue, http.StatusBadRequest)
+		return
+	}
+
+	u.AccessToken = accessToken
+	err = u.upadteUserToDB(c)
+	if err != nil {
+		ue.Err = err
+		helper.WriteJSON(w, ue, http.StatusBadRequest)
+		return
+	}
+	helper.WriteJSON(w, u, http.StatusOK)
 }

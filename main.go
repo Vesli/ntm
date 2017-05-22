@@ -28,9 +28,8 @@ func main() {
 	defer service.Close()
 
 	r := chi.NewRouter()
-	initRet := initMiddleware(service)
 
-	r.Use(initRet)
+	r.Use(initMiddleware(service))
 	r.Mount("/ntm-api", registerRoutes())
 
 	fmt.Println("Running on port:", service.Config.Port)

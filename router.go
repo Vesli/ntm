@@ -14,6 +14,7 @@ func registerRoutes() *chi.Mux {
 
 	r.Route("/user", func(r chi.Router) {
 		r.Post("/subscribe", registerUser)
+		r.Post("/login", loginUser)
 	})
 	return r
 }
