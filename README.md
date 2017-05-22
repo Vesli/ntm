@@ -6,7 +6,7 @@ Built with `go 1.8.1`
 
 MongoDB
 
-A config file containing a:
+A config file containing a:  
     `dbname`  
     `dburl`  
     `port`
