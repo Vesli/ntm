@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/vesli/ntm/config"
@@ -23,8 +24,8 @@ func contextFromMiddleware(r *http.Request) (*config.Config, *mgo.Session) {
 	return conf, sessionC
 }
 
-func registerUser(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
+func decodeBody(requestBody io.Reader) (user, userException) {
+	decoder := json.NewDecoder(requestBody)
 	var (
 		u  user
 		ue userException
@@ -33,9 +34,16 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&u)
 	if err != nil {
 		ue.Err = err
-		ue.Message = "Error on decode"
+		ue.Message = "Error on body decode"
+		return u, ue
+	}
+	return u, ue
+}
+
+func registerUser(w http.ResponseWriter, r *http.Request) {
+	u, ue := decodeBody(r.Body)
+	if ue.Err != nil {
 		helper.WriteJSON(w, ue, http.StatusBadRequest)
-		return
 	}
 
 	conf, sessionC := contextFromMiddleware(r)
@@ -52,18 +60,9 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginUser(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-	var (
-		u  user
-		ue userException
-	)
-
-	err := decoder.Decode(&u)
-	if err != nil {
-		ue.Err = err
-		ue.Message = "Error on decode"
+	u, ue := decodeBody(r.Body)
+	if ue.Err != nil {
 		helper.WriteJSON(w, ue, http.StatusBadRequest)
-		return
 	}
 
 	conf, sessionC := contextFromMiddleware(r)
