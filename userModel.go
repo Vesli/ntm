@@ -37,7 +37,7 @@ func (u *user) insertUserToDB(w http.ResponseWriter, c *mgo.Collection) {
 	helper.WriteJSON(w, u, http.StatusOK)
 }
 
-func (u *user) upadteUserToDB(c *mgo.Collection) error {
+func (u *user) updateUserToDB(c *mgo.Collection) error {
 	err := c.Update(bson.M{"name": u.Name}, u)
 	if err != nil {
 		return err

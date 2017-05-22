@@ -83,7 +83,7 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u.AccessToken = accessToken
-	err = u.upadteUserToDB(c)
+	err = u.updateUserToDB(c)
 	if err != nil {
 		ue.Err = err
 		helper.WriteJSON(w, ue, http.StatusBadRequest)
