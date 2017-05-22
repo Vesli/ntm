@@ -2,8 +2,10 @@
 Next To Me - V0
 
 # Requirement
-Built with go 1.8.1
+Built with `go 1.8.1`
+
 MongoDB
+
 A config file containing a:
     `dbname`
     `dburl`
