@@ -10,7 +10,9 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
+	"github.com/pressly/chi"
 	"github.com/vesli/ntm/config"
 	"github.com/vesli/ntm/helper"
 	mgo "gopkg.in/mgo.v2"
@@ -44,6 +46,16 @@ func decodeBody(requestBody io.Reader) (user, userException) {
 		return u, ue
 	}
 	return u, ue
+}
+
+func getUser(w http.ResponseWriter, r *http.Request) {
+	conf, sessionC := contextFromMiddleware(r)
+	c := sessionC.DB(conf.DBName).C(userCollection)
+
+	userID := strings.Title(chi.URLParam(r, "id"))
+
+	u := &user{}
+	u.findUserInDB(userID, w, c)
 }
 
 func registerUser(w http.ResponseWriter, r *http.Request) {
