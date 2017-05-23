@@ -5,6 +5,8 @@ package main
    ex:
    	Is there an email to send at subscription (email package)
 	Is there any permission on event creation, subscription? (permissions package)
+
+	USE Chi Render for responses and Content-Type JSON
 */
 
 import (
