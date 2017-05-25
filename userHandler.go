@@ -23,8 +23,6 @@ type userException struct {
 	Err     error
 }
 
-const userCollection = "users"
-
 func valuFromContext(r *http.Request) (*config.Config, *gorm.DB) {
 	conf := r.Context().Value(configuration).(*config.Config)
 	DB := r.Context().Value(psqlDB).(*gorm.DB)
