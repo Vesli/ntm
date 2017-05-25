@@ -6,13 +6,14 @@ package main
 */
 
 import (
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/vesli/ntm/config"
-	mgo "gopkg.in/mgo.v2"
 )
 
 type service struct {
-	Config  *config.Config
-	Session *mgo.Session
+	Config *config.Config
+	DB     *gorm.DB
 }
 
 func newService(pathToConfig string) (*service, error) {
@@ -21,19 +22,23 @@ func newService(pathToConfig string) (*service, error) {
 		return nil, err
 	}
 
-	session, err := mgo.Dial(conf.DbURL)
+	db, err := gorm.Open(
+		"postgres",
+		"host="+conf.DBURL+" user="+conf.DBUser+" dbname="+conf.DBName+" sslmode=disable password="+conf.DBPassword)
 	if err != nil {
 		return nil, err
 	}
 
+	db.AutoMigrate(&user{})
+
 	service := &service{
-		Config:  conf,
-		Session: session,
+		Config: conf,
+		DB:     db,
 	}
 
 	return service, nil
 }
 
 func (s *service) Close() {
-	s.Session.Close()
+	s.DB.Close()
 }

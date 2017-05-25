@@ -24,7 +24,7 @@ func main() {
 
 	service, err := newService(*pathToConfig)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer service.Close()
 

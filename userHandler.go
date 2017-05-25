@@ -12,10 +12,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/jinzhu/gorm"
 	"github.com/pressly/chi"
 	"github.com/vesli/ntm/config"
 	"github.com/vesli/ntm/helper"
-	mgo "gopkg.in/mgo.v2"
 )
 
 type userException struct {
@@ -25,11 +25,11 @@ type userException struct {
 
 const userCollection = "users"
 
-func contextFromMiddleware(r *http.Request) (*config.Config, *mgo.Session) {
+func contextFromMiddleware(r *http.Request) (*config.Config, *gorm.DB) {
 	conf := r.Context().Value(configuration).(*config.Config)
-	sessionC := r.Context().Value(mgoSession).(*mgo.Session)
+	DB := r.Context().Value(psqlDB).(*gorm.DB)
 
-	return conf, sessionC
+	return conf, DB
 }
 
 func decodeBody(requestBody io.Reader) (user, userException) {
@@ -49,13 +49,20 @@ func decodeBody(requestBody io.Reader) (user, userException) {
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
-	conf, sessionC := contextFromMiddleware(r)
-	c := sessionC.DB(conf.DBName).C(userCollection)
-
+	_, db := contextFromMiddleware(r)
 	userID := strings.Title(chi.URLParam(r, "id"))
 
 	u := &user{}
-	u.findUserInDB(userID, w, c)
+	err := db.First(&u, userID).Error
+	if err != nil {
+		ue := userException{
+			Message: "Error on retrieving user",
+			Err:     err,
+		}
+		helper.WriteJSON(w, ue, http.StatusBadRequest)
+		return
+	}
+	helper.WriteJSON(w, u, http.StatusOK)
 }
 
 func registerUser(w http.ResponseWriter, r *http.Request) {
@@ -64,17 +71,22 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 		helper.WriteJSON(w, ue, http.StatusBadRequest)
 	}
 
-	conf, sessionC := contextFromMiddleware(r)
-	c := sessionC.DB(conf.DBName).C(userCollection)
-
-	if u.userAlreadyExists(c) {
+	_, db := contextFromMiddleware(r)
+	if u.userAlreadyExists(db) {
 		ue.Message = "User name or email already exists"
 		ue.Err = nil
 		helper.WriteJSON(w, ue, http.StatusBadRequest)
 		return
 	}
 
-	u.insertUserToDB(w, c)
+	err := db.Create(&u).Error
+	if err != nil {
+		ue.Message = "Error on DB Create "
+		ue.Err = err
+		helper.WriteJSON(w, ue, http.StatusInternalServerError)
+		return
+	}
+	helper.WriteJSON(w, u, http.StatusOK)
 }
 
 func loginUser(w http.ResponseWriter, r *http.Request) {
@@ -83,10 +95,9 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		helper.WriteJSON(w, ue, http.StatusBadRequest)
 	}
 
-	conf, sessionC := contextFromMiddleware(r)
-	c := sessionC.DB(conf.DBName).C(userCollection)
+	_, db := contextFromMiddleware(r)
 
-	accessToken, err := u.checkCredentials(c)
+	accessToken, err := u.checkCredentials(db)
 	if err != nil {
 		ue.Err = err
 		ue.Message = "wrong password or login"
@@ -95,11 +106,6 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u.AccessToken = accessToken
-	err = u.updateUserToDB(c)
-	if err != nil {
-		ue.Err = err
-		helper.WriteJSON(w, ue, http.StatusBadRequest)
-		return
-	}
+	db.Model(&u).Update(&u)
 	helper.WriteJSON(w, u, http.StatusOK)
 }
