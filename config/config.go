@@ -8,12 +8,14 @@ import (
 
 // Config configuration structure
 type Config struct {
-	URL    string
-	Units  string
-	AppID  string
-	DBName string
-	DbURL  string
-	Port   int
+	URL        string
+	Units      string
+	AppID      string
+	DBName     string
+	DBUser     string
+	DBPassword string
+	DBURL      string
+	Port       int
 }
 
 // LoadConfig by reading config file and unmarshal data to struct
