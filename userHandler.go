@@ -25,7 +25,7 @@ type userException struct {
 
 const userCollection = "users"
 
-func contextFromMiddleware(r *http.Request) (*config.Config, *gorm.DB) {
+func valuFromContext(r *http.Request) (*config.Config, *gorm.DB) {
 	conf := r.Context().Value(configuration).(*config.Config)
 	DB := r.Context().Value(psqlDB).(*gorm.DB)
 
@@ -49,7 +49,7 @@ func decodeBody(requestBody io.Reader) (user, userException) {
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
-	_, db := contextFromMiddleware(r)
+	_, db := valuFromContext(r)
 	userID := strings.Title(chi.URLParam(r, "id"))
 
 	u := &user{}
@@ -71,7 +71,7 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 		helper.WriteJSON(w, ue, http.StatusBadRequest)
 	}
 
-	_, db := contextFromMiddleware(r)
+	_, db := valuFromContext(r)
 	if u.userAlreadyExists(db) {
 		ue.Message = "User name or email already exists"
 		ue.Err = nil
@@ -95,7 +95,7 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		helper.WriteJSON(w, ue, http.StatusBadRequest)
 	}
 
-	_, db := contextFromMiddleware(r)
+	_, db := valuFromContext(r)
 
 	accessToken, err := u.checkCredentials(db)
 	if err != nil {
