@@ -4,10 +4,12 @@ Next To Me - V0
 # Requirement
 Built with `go 1.8.1`
 
-MongoDB
+A postgresql database
 
 A config file containing a:  
     `dbname`  
+    `dbuser`  
+    `dbpassword`  
     `dburl`  
     `port`
 
