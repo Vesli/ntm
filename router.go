@@ -21,9 +21,7 @@ func registerRoutes() *chi.Mux {
 	})
 
 	r.Route("/event", func(r chi.Router) {
-		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("Comming soon"))
-		})
+		r.Post("/create", createEvent)
 	})
 	return r
 }

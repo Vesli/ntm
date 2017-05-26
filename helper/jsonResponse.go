@@ -5,6 +5,12 @@ import (
 	"net/http"
 )
 
+// ResponseException is a structure to uniform Error responses
+type ResponseException struct {
+	Message string
+	Err     error
+}
+
 // WriteJSON is use to write a JSON response (error and success) from object on request
 func WriteJSON(w http.ResponseWriter, obj interface{}, responseStatus int) {
 	w.Header().Set("Content-Type", "application/json")

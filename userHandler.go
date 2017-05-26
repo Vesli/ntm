@@ -18,82 +18,77 @@ import (
 	"github.com/vesli/ntm/helper"
 )
 
-type userException struct {
-	Message string
-	Err     error
-}
-
-func valuFromContext(r *http.Request) (*config.Config, *gorm.DB) {
+func valueFromContext(r *http.Request) (*config.Config, *gorm.DB) {
 	conf := r.Context().Value(configuration).(*config.Config)
 	DB := r.Context().Value(psqlDB).(*gorm.DB)
 
 	return conf, DB
 }
 
-func decodeBody(requestBody io.Reader) (user, userException) {
+func decodeUserBody(requestBody io.Reader) (User, helper.ResponseException) {
 	decoder := json.NewDecoder(requestBody)
 	var (
-		u  user
-		ue userException
+		u  User
+		re helper.ResponseException
 	)
 
 	err := decoder.Decode(&u)
 	if err != nil {
-		ue.Err = err
-		ue.Message = "Error on body decode"
-		return u, ue
+		re.Err = err
+		re.Message = "Error on body decode"
+		return u, re
 	}
-	return u, ue
+	return u, re
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
-	_, db := valuFromContext(r)
+	_, db := valueFromContext(r)
 	userID := strings.Title(chi.URLParam(r, "id"))
 
-	u := &user{}
+	u := &User{}
 	err := db.First(&u, userID).Error
 	if err != nil {
-		ue := userException{
+		re := helper.ResponseException{
 			Message: "Error on retrieving user",
 			Err:     err,
 		}
-		helper.WriteJSON(w, ue, http.StatusBadRequest)
+		helper.WriteJSON(w, re, http.StatusBadRequest)
 		return
 	}
 	helper.WriteJSON(w, u, http.StatusOK)
 }
 
 func registerUser(w http.ResponseWriter, r *http.Request) {
-	u, ue := decodeBody(r.Body)
-	if ue.Err != nil {
-		helper.WriteJSON(w, ue, http.StatusBadRequest)
+	u, re := decodeUserBody(r.Body)
+	if re.Err != nil {
+		helper.WriteJSON(w, re, http.StatusBadRequest)
 	}
 
-	_, db := valuFromContext(r)
+	_, db := valueFromContext(r)
 	if u.userAlreadyExists(db) {
-		ue.Message = "User name or email already exists"
-		ue.Err = nil
-		helper.WriteJSON(w, ue, http.StatusBadRequest)
+		re.Message = "User name or email already exists"
+		re.Err = nil
+		helper.WriteJSON(w, re, http.StatusBadRequest)
 		return
 	}
 
 	err := db.Create(&u).Error
 	if err != nil {
-		ue.Message = "Error on DB Create "
-		ue.Err = err
-		helper.WriteJSON(w, ue, http.StatusInternalServerError)
+		re.Message = "Error on DB Create "
+		re.Err = err
+		helper.WriteJSON(w, re, http.StatusInternalServerError)
 		return
 	}
 	helper.WriteJSON(w, u, http.StatusOK)
 }
 
 func loginUser(w http.ResponseWriter, r *http.Request) {
-	u, ue := decodeBody(r.Body)
+	u, ue := decodeUserBody(r.Body)
 	if ue.Err != nil {
 		helper.WriteJSON(w, ue, http.StatusBadRequest)
 	}
 
-	_, db := valuFromContext(r)
+	_, db := valueFromContext(r)
 
 	accessToken, err := u.checkCredentials(db)
 	if err != nil {

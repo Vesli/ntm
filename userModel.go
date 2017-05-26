@@ -10,22 +10,22 @@ package main
 import (
 	"crypto/sha256"
 	"errors"
-	"time"
 
 	"github.com/jinzhu/gorm"
 )
 
-type user struct {
-	ID          int       `json:"id"`
-	Name        string    `json:"name"`
-	Password    string    `json:"password"`
-	Email       string    `json:"email"`
-	Permission  int8      `json:"permission"`
-	DateCreated time.Time `json:"date_creation"`
-	AccessToken []byte    `json:"access_token,omitempty"`
+// User struct used as DB model
+type User struct {
+	gorm.Model
+	Name        string `json:"name"`
+	Password    string `json:"password"`
+	Email       string `json:"email"`
+	Permission  int8   `json:"permission"`
+	AccessToken []byte `json:"access_token,omitempty"`
+	Events      []Event
 }
 
-func (u *user) userAlreadyExists(db *gorm.DB) bool {
+func (u *User) userAlreadyExists(db *gorm.DB) bool {
 	qs := db.First(&u, "email = ?", u.Email).GetErrors()
 	if len(qs) == 0 {
 		return true
@@ -34,7 +34,7 @@ func (u *user) userAlreadyExists(db *gorm.DB) bool {
 	return false
 }
 
-func (u *user) checkCredentials(db *gorm.DB) ([]byte, error) {
+func (u *User) checkCredentials(db *gorm.DB) ([]byte, error) {
 	err := db.First(&u, &u).Error
 	if err != nil {
 		return []byte(nil), errors.New("Wrong password or login")
@@ -42,5 +42,15 @@ func (u *user) checkCredentials(db *gorm.DB) ([]byte, error) {
 
 	h := sha256.New()
 	h.Write([]byte(u.Password))
+
 	return h.Sum(nil), nil
+}
+
+func (u *User) updateUserInDB(db *gorm.DB) error {
+	err := db.Model(u).Update(u).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

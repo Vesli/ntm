@@ -29,7 +29,7 @@ func newService(pathToConfig string) (*service, error) {
 		return nil, err
 	}
 
-	db.AutoMigrate(&user{})
+	db.AutoMigrate(&User{}, &Event{})
 
 	service := &service{
 		Config: conf,
