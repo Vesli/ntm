@@ -25,7 +25,7 @@ func decodeEventBody(requestBody io.Reader) (Event, helper.ResponseException) {
 }
 
 /*
-	TODO UserID passed to the foreignKey has to be from the connected user
+	TODO CreateEvent: UserID passed to the foreignKey has to be from the connected user
 	and not from JSON.
 */
 func createEvent(w http.ResponseWriter, r *http.Request) {
