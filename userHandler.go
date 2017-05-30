@@ -32,26 +32,26 @@ func valueFromContext(r *http.Request) (*config.Config, *gorm.DB) {
 	return conf, DB
 }
 
-func decodeBody(requestBody io.Reader, conf *config.Config) (Token, helper.ResponseException) {
-	decoder := json.NewDecoder(requestBody)
+func decodeBody(requestBody io.Reader) (*Token, helper.ResponseException) {
 	var (
 		t  Token
 		re helper.ResponseException
 	)
 
+	decoder := json.NewDecoder(requestBody)
 	err := decoder.Decode(&t)
 	if err != nil {
 		re.Err = err
-		re.Message = "Error on body decode"
-		return t, re
+		re.Message = "Error on decode"
+		return nil, re
 	}
 
-	return t, re
+	return &t, re
 }
 
 /* Facebook login from URL */
-func getUserFromToken(t Token, conf *config.Config, re helper.ResponseException) (User, helper.ResponseException) {
-	var u User
+func getUserFromToken(t *Token, conf *config.Config, re helper.ResponseException) (*User, helper.ResponseException) {
+	var u *User
 
 	urlParams := make(url.Values)
 	urlParams.Add("access_token", t.AccessToken)
@@ -61,7 +61,7 @@ func getUserFromToken(t Token, conf *config.Config, re helper.ResponseException)
 	if err != nil {
 		re.Err = err
 		re.Message = "Error on get params"
-		return u, re
+		return nil, re
 	}
 
 	decoder := json.NewDecoder(ret.Body)
@@ -69,7 +69,7 @@ func getUserFromToken(t Token, conf *config.Config, re helper.ResponseException)
 	if err != nil {
 		re.Err = err
 		re.Message = "Error on decode"
-		return u, re
+		return nil, re
 	}
 	return u, re
 }
@@ -94,12 +94,17 @@ func getUserFromDB(w http.ResponseWriter, r *http.Request) {
 func registerAndLogginUser(w http.ResponseWriter, r *http.Request) {
 	conf, db := valueFromContext(r)
 
-	t, re := decodeBody(r.Body, conf)
+	t, re := decodeBody(r.Body)
 	if re.Err != nil {
 		helper.WriteJSON(w, re, http.StatusBadRequest)
+		return
 	}
 
 	u, re := getUserFromToken(t, conf, re)
+	if re.Err != nil {
+		helper.WriteJSON(w, re, http.StatusBadRequest)
+		return
+	}
 	if !u.userAlreadyExists(db) {
 		err := db.Create(&u).Error
 		if err != nil {
