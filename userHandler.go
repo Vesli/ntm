@@ -8,8 +8,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/jinzhu/gorm"
@@ -18,6 +20,11 @@ import (
 	"github.com/vesli/ntm/helper"
 )
 
+// Token structure for passing access token from response to the facebook graph API
+type Token struct {
+	AccessToken string `json:"access_token"`
+}
+
 func valueFromContext(r *http.Request) (*config.Config, *gorm.DB) {
 	conf := r.Context().Value(configuration).(*config.Config)
 	DB := r.Context().Value(psqlDB).(*gorm.DB)
@@ -25,23 +32,49 @@ func valueFromContext(r *http.Request) (*config.Config, *gorm.DB) {
 	return conf, DB
 }
 
-func decodeUserBody(requestBody io.Reader) (User, helper.ResponseException) {
+func decodeBody(requestBody io.Reader, conf *config.Config) (Token, helper.ResponseException) {
 	decoder := json.NewDecoder(requestBody)
 	var (
-		u  User
+		t  Token
 		re helper.ResponseException
 	)
 
-	err := decoder.Decode(&u)
+	err := decoder.Decode(&t)
 	if err != nil {
 		re.Err = err
 		re.Message = "Error on body decode"
+		return t, re
+	}
+
+	return t, re
+}
+
+/* Facebook login from URL */
+func getUserFromToken(t Token, conf *config.Config, re helper.ResponseException) (User, helper.ResponseException) {
+	var u User
+
+	urlParams := make(url.Values)
+	urlParams.Add("access_token", t.AccessToken)
+	urlParams.Add("fields", conf.FBParams)
+
+	ret, err := http.Get(fmt.Sprintf("%s?%s", conf.FBURL, urlParams.Encode()))
+	if err != nil {
+		re.Err = err
+		re.Message = "Error on get params"
+		return u, re
+	}
+
+	decoder := json.NewDecoder(ret.Body)
+	err = decoder.Decode(&u)
+	if err != nil {
+		re.Err = err
+		re.Message = "Error on decode"
 		return u, re
 	}
 	return u, re
 }
 
-func getUser(w http.ResponseWriter, r *http.Request) {
+func getUserFromDB(w http.ResponseWriter, r *http.Request) {
 	_, db := valueFromContext(r)
 	userID := strings.Title(chi.URLParam(r, "id"))
 
@@ -58,47 +91,24 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	helper.WriteJSON(w, u, http.StatusOK)
 }
 
-func registerUser(w http.ResponseWriter, r *http.Request) {
-	u, re := decodeUserBody(r.Body)
+func registerAndLogginUser(w http.ResponseWriter, r *http.Request) {
+	conf, db := valueFromContext(r)
+
+	t, re := decodeBody(r.Body, conf)
 	if re.Err != nil {
 		helper.WriteJSON(w, re, http.StatusBadRequest)
 	}
 
-	_, db := valueFromContext(r)
-	if u.userAlreadyExists(db) {
-		re.Message = "User name or email already exists"
-		re.Err = nil
-		helper.WriteJSON(w, re, http.StatusBadRequest)
-		return
+	u, re := getUserFromToken(t, conf, re)
+	if !u.userAlreadyExists(db) {
+		err := db.Create(&u).Error
+		if err != nil {
+			re.Message = "Error on DB Create "
+			re.Err = err
+			helper.WriteJSON(w, re, http.StatusInternalServerError)
+			return
+		}
 	}
 
-	err := db.Create(&u).Error
-	if err != nil {
-		re.Message = "Error on DB Create "
-		re.Err = err
-		helper.WriteJSON(w, re, http.StatusInternalServerError)
-		return
-	}
-	helper.WriteJSON(w, u, http.StatusOK)
-}
-
-func loginUser(w http.ResponseWriter, r *http.Request) {
-	u, ue := decodeUserBody(r.Body)
-	if ue.Err != nil {
-		helper.WriteJSON(w, ue, http.StatusBadRequest)
-	}
-
-	_, db := valueFromContext(r)
-
-	accessToken, err := u.checkCredentials(db)
-	if err != nil {
-		ue.Err = err
-		ue.Message = "wrong password or login"
-		helper.WriteJSON(w, ue, http.StatusBadRequest)
-		return
-	}
-
-	u.AccessToken = accessToken
-	db.Model(&u).Update(&u)
 	helper.WriteJSON(w, u, http.StatusOK)
 }

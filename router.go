@@ -13,10 +13,9 @@ func registerRoutes() *chi.Mux {
 	})
 
 	r.Route("/user", func(r chi.Router) {
-		r.Post("/subscribe", registerUser)
-		r.Post("/login", loginUser)
+		r.Post("/subscribe", registerAndLogginUser)
 		r.Route("/profile", func(r chi.Router) {
-			r.Get("/:id", getUser)
+			r.Get("/:id", getUserFromDB)
 		})
 	})
 

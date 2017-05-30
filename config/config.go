@@ -15,6 +15,8 @@ type Config struct {
 	DBUser     string
 	DBPassword string
 	DBURL      string
+	FBURL      string
+	FBParams   string
 	Port       int
 }
 

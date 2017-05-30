@@ -8,21 +8,28 @@ package main
 */
 
 import (
-	"crypto/sha256"
-	"errors"
+	"time"
 
 	"github.com/jinzhu/gorm"
 )
 
+type data struct {
+	URL string `json:"url"`
+}
+
+type picture struct {
+	Data data `json:"Data"`
+}
+
 // User struct used as DB model
 type User struct {
 	gorm.Model
-	Name        string `json:"name"`
-	Password    string `json:"password"`
-	Email       string `json:"email"`
-	Permission  int8   `json:"permission"`
-	AccessToken []byte `json:"access_token,omitempty"`
-	Events      []Event
+	FBID     string    `json:"id"`
+	Name     string    `json:"name"`
+	Email    string    `json:"email"`
+	Birthday time.Time `json:"birthday"`
+	Picture  picture   `json:"Picture"`
+	Events   []Event
 }
 
 func (u *User) userAlreadyExists(db *gorm.DB) bool {
@@ -32,18 +39,6 @@ func (u *User) userAlreadyExists(db *gorm.DB) bool {
 	}
 
 	return false
-}
-
-func (u *User) checkCredentials(db *gorm.DB) ([]byte, error) {
-	err := db.First(&u, &u).Error
-	if err != nil {
-		return []byte(nil), errors.New("Wrong password or login")
-	}
-
-	h := sha256.New()
-	h.Write([]byte(u.Password))
-
-	return h.Sum(nil), nil
 }
 
 func (u *User) updateUserInDB(db *gorm.DB) error {
