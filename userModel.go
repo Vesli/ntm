@@ -7,11 +7,7 @@ package main
 	update matching the events routing
 */
 
-import (
-	"time"
-
-	"github.com/jinzhu/gorm"
-)
+import "github.com/jinzhu/gorm"
 
 type data struct {
 	URL string `json:"url"`
@@ -24,11 +20,11 @@ type picture struct {
 // User struct used as DB model
 type User struct {
 	gorm.Model
-	FBID     string    `json:"id"`
-	Name     string    `json:"name"`
-	Email    string    `json:"email"`
-	Birthday time.Time `json:"birthday"`
-	Picture  picture   `json:"Picture"`
+	FBID     string  `json:"id"`
+	Name     string  `json:"name"`
+	Email    string  `json:"email"`
+	Birthday string  `json:"birthday"`
+	Picture  picture `json:"Picture"`
 	Events   []Event
 }
 

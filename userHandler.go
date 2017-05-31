@@ -38,12 +38,12 @@ func getUserFromToken(t *Token, conf *config.Config) (*User, error) {
 	urlParams.Add("access_token", t.AccessToken)
 	urlParams.Add("fields", conf.FBParams)
 
-	ret, err := http.Get(fmt.Sprintf("%s?%s", conf.FBURL, urlParams.Encode()))
+	r, err := http.Get(fmt.Sprintf("%s?%s", conf.FBURL, urlParams.Encode()))
 	if err != nil {
 		return nil, err
 	}
 
-	err = helper.DecodeBody(&u, ret.Body)
+	err = helper.DecodeBody(&u, r.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -73,12 +73,12 @@ func registerAndLogginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	conf, db := valueFromContext(r)
-
 	u, err := getUserFromToken(t, conf)
 	if err != nil {
 		helper.WriteJSON(w, err, http.StatusBadRequest)
 		return
 	}
+
 	if !u.userAlreadyExists(db) {
 		err = db.Create(&u).Error
 		if err != nil {
