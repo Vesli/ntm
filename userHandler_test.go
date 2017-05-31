@@ -53,12 +53,12 @@ var _ = Describe("UserHandler", func() {
 		})
 
 		Describe("Test getUserFromToken", func() {
-			var t Token
+			t := &Token{}
 
 			Context("With correct url", func() {
 				It("Should succeed", func() {
 					confTest.FBURL = server.URL() + confTest.FBURL
-					u, err := getUserFromToken(&t, confTest)
+					u, err := getUserFromToken(t, confTest)
 					Ω(err).Should(BeNil())
 					Ω(u).ShouldNot(BeNil())
 				})
@@ -67,7 +67,7 @@ var _ = Describe("UserHandler", func() {
 			Context("With uncorrect url", func() {
 				It("Should fail", func() {
 					confTest.FBURL = server.URL() + "ok"
-					u, err := getUserFromToken(&t, confTest)
+					u, err := getUserFromToken(t, confTest)
 					Ω(err).ShouldNot(BeNil())
 					Ω(u).Should(BeNil())
 				})

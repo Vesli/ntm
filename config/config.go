@@ -27,9 +27,9 @@ func LoadConfig(pathToConfig string) (*Config, error) {
 		return nil, fmt.Errorf("File config error: %s", err)
 	}
 
-	var conf Config
-	if err = json.Unmarshal(data, &conf); err != nil {
+	conf := &Config{}
+	if err = json.Unmarshal(data, conf); err != nil {
 		return nil, err
 	}
-	return &conf, nil
+	return conf, nil
 }

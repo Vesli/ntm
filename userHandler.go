@@ -32,7 +32,7 @@ func valueFromContext(r *http.Request) (*config.Config, *gorm.DB) {
 
 /* Facebook login from URL */
 func getUserFromToken(t *Token, conf *config.Config) (*User, error) {
-	var u *User
+	u := &User{}
 
 	urlParams := make(url.Values)
 	urlParams.Add("access_token", t.AccessToken)
@@ -64,7 +64,7 @@ func getUserFromDB(w http.ResponseWriter, r *http.Request) {
 }
 
 func registerAndLogginUser(w http.ResponseWriter, r *http.Request) {
-	var t *Token
+	t := &Token{}
 
 	re := helper.DecodeBody(&t, r.Body)
 	if re != nil {
