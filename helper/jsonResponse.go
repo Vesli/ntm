@@ -6,10 +6,15 @@ import (
 )
 
 // ResponseException is a structure to uniform Error responses
-type ResponseException struct {
-	Message string
-	Err     error
-}
+// type ResponseException struct {
+// 	Message string
+// 	Err     error
+// }
+//
+// func (re *ResponseException) Error() string {
+// 	re.Message = re.Message + " " + re.Err.Error()
+// 	return re.Message
+// }
 
 // WriteJSON is use to write a JSON response (error and success) from object on request
 func WriteJSON(w http.ResponseWriter, obj interface{}, responseStatus int) {
