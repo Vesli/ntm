@@ -24,12 +24,15 @@ type User struct {
 	Name     string  `json:"name"`
 	Email    string  `json:"email"`
 	Birthday string  `json:"birthday"`
-	Picture  picture `json:"Picture"`
+	LoggedIn bool    `json:"logged_in"`
+	Picture  picture `json:"picture"`
 	Events   []Event
 }
 
+// userAlreadyExists check if a fb id is present.
+// It's unique and sometimes other parameters can be blocked from user authorisation
 func (u *User) userAlreadyExists(db *gorm.DB) bool {
-	qs := db.First(&u, "email = ?", u.Email).GetErrors()
+	qs := db.First(&u, "fb_id = ?", u.FBID).GetErrors()
 	if len(qs) == 0 {
 		return true
 	}

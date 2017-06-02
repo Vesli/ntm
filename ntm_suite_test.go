@@ -46,6 +46,8 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
+	fmt.Println("Deleting table users!")
+	dbTest.Delete(&User{})
 	fmt.Println("Closing!")
 	s.Close()
 })

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	. "github.com/onsi/ginkgo"
@@ -36,7 +35,6 @@ var _ = Describe("UserHandler", func() {
 		})
 
 		AfterEach(func() {
-			fmt.Println("Server close")
 			server.Close()
 		})
 
@@ -70,20 +68,6 @@ var _ = Describe("UserHandler", func() {
 					u, err := getUserFromToken(t, confTest)
 					Ω(err).ShouldNot(BeNil())
 					Ω(u).Should(BeNil())
-				})
-			})
-		})
-
-		Describe("Test Post on Register", func() {
-			Context("Test Error on register", func() {
-				It("Should return and error", func() {
-
-					// response, err := http.Post(server.URL()+"/ntm-api/user/subscribe", "application/json", bytes.NewReader([]byte(`{"coucou: "ok"}`)))
-					// Ω(server.ReceivedRequests()).Should(Not(BeNil()))
-					//
-					// Ω(err).Should(BeNil())
-					// Ω(response).ShouldNot(BeNil())
-					// Ω(response.StatusCode).Should(Equal(http.StatusBadRequest))
 				})
 			})
 		})
