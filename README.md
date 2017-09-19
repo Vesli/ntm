@@ -1,5 +1,6 @@
 # ntm
 Next To Me - V0
+API to support android / ios app
 
 # Requirement
 Built with `go 1.8.1`
