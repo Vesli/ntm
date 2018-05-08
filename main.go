@@ -11,28 +11,64 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"log"
 	"net/http"
+	"os"
 
-	"github.com/pressly/chi"
+	"github.com/go-chi/chi"
 )
 
-func main() {
-	pathToConfig := flag.String("config", "config.json", "Path to config file")
-	flag.Parse()
+// Config API
+type Config struct {
+	Port string
+}
 
-	service, err := newService(*pathToConfig)
-	if err != nil {
-		log.Fatal(err)
+// Service api
+type Service struct {
+	Conf   *Config
+	Router *chi.Mux
+}
+
+func loadEnvironment() *Config {
+	c := &Config{
+		Port: os.Getenv("port"),
 	}
-	defer service.Close()
 
+	return c
+}
+
+func routes(s *Service) *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Use(initMiddleware(service))
-	r.Mount("/ntm-api", registerRoutes())
+	r.Route("/user", func(r chi.Router) {
+		r.Route("/profile", func(r chi.Router) {
+			r.Get("/:id", func(w http.ResponseWriter, r *http.Request) {
+				w.Write([]byte("/profile/:id"))
+			})
+		})
+	})
 
-	fmt.Println("Running on port:", service.Config.Port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", service.Config.Port), r))
+	r.Route("/event", func(r chi.Router) {
+		r.Post("/create", s.AddEvent)
+	})
+	return r
+}
+
+func newService() *Service {
+	s := &Service{
+		Conf:   loadEnvironment(),
+		Router: chi.NewRouter(),
+	}
+
+	s.Router.Mount("/api", routes(s))
+	return s
+}
+
+func main() {
+	environment := flag.String("env", "dev", "Which env to run the API")
+	flag.Parse()
+
+	_ = environment
+
+	s := newService()
+	_ = s
 }
