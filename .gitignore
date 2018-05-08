@@ -13,10 +13,5 @@
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
 
-# config
-config.json
-config-fail-test.json
-config-test.json
-
 # binary
 ntm
