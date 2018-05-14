@@ -12,7 +12,11 @@ import (
 
 // Config API
 type Config struct {
-	Port       string
+	Port string
+
+	FBURL    string
+	FBFields string
+
 	DBURL      string
 	DBUser     string
 	DBName     string
